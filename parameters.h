@@ -5,12 +5,12 @@
 //------------------------------------------------------------------------
 namespace Parameters
 {
-	enum DetectorAxis
-	{
-		DetectorAxisHorizontal,
-		DetectorAxisMax,
-	};
-	
+    enum DetectorAxis
+    {
+        DetectorAxisHorizontal,
+        DetectorAxisMax,
+    };
+
     // Order of detectors associated with each pixel
     enum Detector
     {
@@ -36,7 +36,7 @@ namespace Parameters
     constexpr unsigned int outputScale = 12;
     constexpr unsigned int inputScale = 4;
 
-    constexpr float flowPersistence = 0.995f;
+    constexpr float flowPersistence = 0.94f;
     constexpr float spikePersistence = 0.97f;
     
     constexpr float outputVectorScale = 2.0f;

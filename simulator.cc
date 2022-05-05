@@ -95,10 +95,10 @@ void buildDetectors(unsigned int *excitatoryRowLength, unsigned int *excitatoryI
                 const unsigned int yj = yi - 1;
 
                 // Add excitatory synapses to all detectors
-				for(unsigned int d = 0; d < Parameters::DetectorMax; d++) {
-					excitatoryInd[sExcitatory++] = getNeuronIndex(Parameters::detectorWidth * Parameters::DetectorMax,
-																  xj + d, yj);
-				}
+                for(unsigned int d = 0; d < Parameters::DetectorMax; d++) {
+                    excitatoryInd[sExcitatory++] = getNeuronIndex(Parameters::detectorWidth * Parameters::DetectorMax,
+                                                                  xj + d, yj);
+                }
                 excitatoryRowLength[iExcitatory++] = Parameters::DetectorMax;
             }
             else {
@@ -161,7 +161,7 @@ void buildDetectors(unsigned int *excitatoryRowLength, unsigned int *excitatoryI
 }
 
 void displayThreadHandler(std::mutex &inputMutex, const cv::Mat &inputImage, std::mutex &outputMutex, 
-						  const float (&output)[Parameters::detectorWidth][Parameters::detectorHeight][Parameters::DetectorAxisMax])
+                          const float (&output)[Parameters::detectorWidth][Parameters::detectorHeight][Parameters::DetectorAxisMax])
 {
     cv::namedWindow("Input", cv::WINDOW_NORMAL);
     cv::resizeWindow("Input", Parameters::inputWidth * Parameters::inputScale,
@@ -170,7 +170,7 @@ void displayThreadHandler(std::mutex &inputMutex, const cv::Mat &inputImage, std
     // Create output image
     const unsigned int outputImageWidth = Parameters::detectorWidth * Parameters::outputScale;
 	const unsigned int outputImageHeight = Parameters::detectorHeight * Parameters::outputScale;
-    cv::Mat outputImage(outputImageWidth, outputImageHeight, CV_8UC3);
+    cv::Mat outputImage(outputImageHeight, outputImageWidth, CV_8UC3);
 
 #ifdef JETSON_POWER
     std::ifstream powerStream("/sys/devices/platform/7000c400.i2c/i2c-1/1-0040/iio_device/in_power0_input");
@@ -233,7 +233,7 @@ void displayThreadHandler(std::mutex &inputMutex, const cv::Mat &inputImage, std
 }
 
 void applyOutputSpikes(unsigned int outputSpikeCount, const unsigned int *outputSpikes, 
-					   float (&output)[Parameters::detectorWidth][Parameters::detectorHeight][Parameters::DetectorAxisMax])
+                       float (&output)[Parameters::detectorWidth][Parameters::detectorHeight][Parameters::DetectorAxisMax])
 {
     // Loop through output spikes
     for(unsigned int s = 0; s < outputSpikeCount; s++)
@@ -269,9 +269,9 @@ void applyOutputSpikes(unsigned int outputSpikeCount, const unsigned int *output
     // Decay output
     for(unsigned int x = 0; x < Parameters::detectorWidth; x++) {
         for(unsigned int y = 0; y < Parameters::detectorHeight; y++){
-			for(unsigned int d = 0; d < Parameters::DetectorAxisMax; d++) {
-				output[x][y][d] *= Parameters::flowPersistence;
-			}
+            for(unsigned int d = 0; d < Parameters::DetectorAxisMax; d++) {
+                output[x][y][d] *= Parameters::flowPersistence;
+            }
         } 
     }
 }
@@ -291,17 +291,17 @@ int main()
 
     initializeSparse();
 
-	// Filter to extract positive events in bottom half of visual field
-	using Filter = DVS::CombineFilter<DVS::PolarityFilter<DVS::Polarity::ON>, DVS::ROIFilter<0, 640, 240, 480>>;
-	
-	// Transform X coordinates by multiplying by 0.25
-    using TransformX = DVS::Scale<8192>;
-	
-	// Transform Y coordinates by subtracting 240 and multiplying result by 0.25
-    using TransformY = DVS::CombineTransform<DVS::Subtract<240>, DVS::Scale<8192>>;
+    // Filter to extract positive events in bottom half of visual field
+    using Filter = DVS::CombineFilter<DVS::PolarityFilter<DVS::Polarity::ON>, DVS::ROIFilter<0, 640, 120, 480>>;
 
-	// Create DVXplorer device
-	DVS::DVXplorer dvs;
+    // Transform X coordinates by multiplying by 0.25
+    using TransformX = DVS::Scale<8192>;
+
+    // Transform Y coordinates by subtracting 240 and multiplying result by 0.25
+    using TransformY = DVS::CombineTransform<DVS::Subtract<120>, DVS::Scale<8192>>;
+
+    // Create DVXplorer device
+    DVS::DVXplorer dvs;
     dvs.start();
     
     double dvsGet = 0.0;
@@ -309,7 +309,7 @@ int main()
     double render = 0.0;
 
     std::mutex inputMutex;
-    cv::Mat inputImage(Parameters::inputWidth, Parameters::inputHeight, CV_32F);
+    cv::Mat inputImage(Parameters::inputHeight, Parameters::inputWidth, CV_32F);
 
     std::mutex outputMutex;
     float output[Parameters::detectorWidth][Parameters::detectorHeight][Parameters::DetectorAxisMax] = {0};

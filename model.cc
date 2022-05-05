@@ -30,11 +30,11 @@ void modelDefinition(NNmodel &model)
         -60.0,  // 3 - Vreset
         -50.0,  // 4 - Vthresh
         0.0,    // 5 - Ioffset
-        1.0);    // 6 - TauRefrac
+        1.0);   // 6 - TauRefrac
 
     // LIF initial conditions
     NeuronModels::LIF::VarValues lifInit(
-        -60.0,        // 0 - V
+        -60.0,      // 0 - V
         0.0);       // 1 - RefracTime
 
     WeightUpdateModels::StaticPulse::VarValues dvsMacroPixelWeightUpdateInit(
