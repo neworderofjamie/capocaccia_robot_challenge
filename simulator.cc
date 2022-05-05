@@ -286,8 +286,8 @@ int main()
     initialize();
 
     buildCentreToMacroConnection(rowLengthDVS_MacroPixel, indDVS_MacroPixel);
-    buildDetectors(rowLengthMacroPixel_Output_Excitatory, indMacroPixel_Output_Excitatory,
-                   rowLengthMacroPixel_Output_Inhibitory, indMacroPixel_Output_Inhibitory);
+    buildDetectors(rowLengthMacroPixel_Flow_Excitatory, indMacroPixel_Flow_Excitatory,
+                   rowLengthMacroPixel_Flow_Inhibitory, indMacroPixel_Flow_Inhibitory);
 
     initializeSparse();
 
@@ -385,14 +385,15 @@ int main()
 
             // Simulate
             stepTime();
-            pullOutputCurrentSpikesFromDevice();
+            pullFlowCurrentSpikesFromDevice();
         }
 
         {
             TimerAccumulate timer(render);
             {
+                // **TODO** use spikerecording with 1 timestep buffer
                 std::lock_guard<std::mutex> lock(outputMutex);
-                applyOutputSpikes(spikeCount_Output, spike_Output, output);
+                applyOutputSpikes(spikeCount_Flow, spike_Flow, output);
             }
         }
 

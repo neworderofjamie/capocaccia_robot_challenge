@@ -65,8 +65,8 @@ void modelDefinition(NNmodel &model)
     model.addNeuronPopulation<NeuronModels::LIF>("MacroPixel", Parameters::macroPixelWidth * Parameters::macroPixelHeight,
                                                  lifParams, lifInit);
 
-    auto *output = model.addNeuronPopulation<NeuronModels::LIF>("Output", Parameters::detectorWidth * Parameters::detectorHeight * Parameters::DetectorMax,
-                                                                lifParams, lifInit);
+    auto *flow = model.addNeuronPopulation<NeuronModels::LIF>("Flow", Parameters::detectorWidth * Parameters::detectorHeight * Parameters::DetectorMax,
+                                                              lifParams, lifInit);
 
     //------------------------------------------------------------------------
     // Synapse populations
@@ -77,22 +77,23 @@ void modelDefinition(NNmodel &model)
         {}, dvsMacroPixelWeightUpdateInit,
         macroPixelPostSynParams, {});
 
-    auto *macroPixelOutputExcitatory = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, PostsynapticModels::ExpCurr>(
-        "MacroPixel_Output_Excitatory", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
-        "MacroPixel", "Output",
+    auto *macroPixelFlowExcitatory = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, PostsynapticModels::ExpCurr>(
+        "MacroPixel_Flow_Excitatory", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
+        "MacroPixel", "Flow",
         {}, macroPixelOutputExcitatoryWeightUpdateInit,
         outputExcitatoryPostSynParams, {});
 
-    auto *macroPixelOutputInhibitory = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, PostsynapticModels::ExpCurr>(
-        "MacroPixel_Output_Inhibitory", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
-        "MacroPixel", "Output",
+    auto *macroPixelFlowInhibitory = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, PostsynapticModels::ExpCurr>(
+        "MacroPixel_Flow_Inhibitory", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
+        "MacroPixel", "Flow",
         {}, macroPixelOutputInhibitoryWeightUpdateInit,
         outputInhibitoryPostSynParams, {});
     
     dvsMacroPixel->setMaxConnections(1);
-    macroPixelOutputExcitatory->setMaxConnections(Parameters::DetectorMax);
-    macroPixelOutputInhibitory->setMaxConnections(Parameters::DetectorMax);
-    // Use zero-copy for input and output spikes as we want to access them every timestep
-    //dvs->setSpikeZeroCopyEnabled(true);
-    //output->setSpikeZeroCopyEnabled(true);
+    macroPixelFlowExcitatory->setMaxConnections(Parameters::DetectorMax);
+    macroPixelFlowInhibitory->setMaxConnections(Parameters::DetectorMax);
+
+    dvs->setExtraGlobalParamLocation("spikeVector", VarLocation::HOST_DEVICE_ZERO_COPY);
+    flow->setSpikeLocation(VarLocation::HOST_DEVICE_ZERO_COPY);
+
 }
