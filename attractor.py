@@ -38,7 +38,7 @@ lif_sfa_model = create_custom_neuron_class(
         $(Gsfa) += $(Dsfa);
         """,
     is_auto_refractory_required=False)
-    
+
 exc_weight_init_model = create_custom_init_var_snippet_class(
     "exc_weight_init",
     param_names=["J0", "SigmaConn", "NeuronTheta", "g"],
@@ -49,7 +49,7 @@ exc_weight_init_model = create_custom_init_var_snippet_class(
         const scalar thetaDiff = preTheta - postTheta;
         $(value) = $(g) * ($(J0) / (2.50662827463 * $(SigmaConn))) * exp(-(thetaDiff * thetaDiff) / (2 * $(SigmaConn) * $(SigmaConn)));
         """)
-        
+
 uniform_motion_current_source_model = create_custom_current_source_class(
     "uniform_motion_current_source",
     param_names=["Lambda", "SigmaConn", "NeuronTheta"],
@@ -60,9 +60,10 @@ uniform_motion_current_source_model = create_custom_current_source_class(
         const scalar theta = $(id) * $(NeuronTheta);
         const scalar thetaDiff = theta - $(ThetaStim);
         $(I) = $(Lambda) * (-0.08 + 0.48 * exp(-(thetaDiff * thetaDiff) / (2 * $(SigmaConn) * $(SigmaConn))));
-        $(injectCurrent, $(I) + (5.0 * $(gennrand_normal)));
+        // Inject current + noise to test robustness
+        $(injectCurrent, $(I) + (0.5 * $(gennrand_normal)));
         """)
-        
+
 # Neuron parameters
 lif_sfa_params = {"TauSFA": 90.0, "Vrest": -70.0, "Vreset": -60.0,
                   "Vthresh": -50.0, "Esfa": -80.0, "Dsfa": 0.004}
@@ -126,22 +127,28 @@ model.time = 0.0
 isyn = []
 while model.timestep < 100000:
     model.step_time()
+    
+    # Copy input current from device and store in list
     input.pull_var_from_device("I")
     isyn.append(np.copy(i_view))
     
+    # Set stimulus angle
     theta_stim_view[:] = np.fmod(theta_stim_view[:] + 70.0 * 0.1E-3, 360.0)
 
 model.pull_recording_buffers_from_device()
 
-spike_times, spike_ids = exc.spike_recording_data
-print(spike_times.shape)
+
+
 
 fig, axes = plt.subplots(2)
 
-axes[0].scatter(spike_times, spike_ids, s=1)
+spike_times, spike_ids = exc.spike_recording_data
+axes[0].scatter(spike_times / 0.1, spike_ids, s=1)
 
 isyn = np.vstack(isyn).T
-axes[1].imshow(isyn, aspect=100)
+axes[1].imshow(isyn, aspect=100, origin="lower")
 
-print(np.amin(isyn), np.amax(isyn))
+axes[0].set_ylabel("Neuron ID")
+axes[1].set_xlabel("Timestep")
+axes[1].set_ylabel("Neuron ID")
 plt.show()
